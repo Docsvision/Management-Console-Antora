@@ -1,10 +1,15 @@
 :update: 'managementconsole*' 'docsvision-settingsservice*' 'docsvision-externalapi*'
 :mancons:
 :installer: {dv} Management Console.msi
+:mod-log-req: {mc-log-req}
+:mod: {of-mc}
+:link: mgmtconsole:user:logs
 
 = Обновление модуля
 
 include::webclient:ROOT:partial$excerpts.adoc[tags=what-changed]
+
+include::GBL-3610@engineer:ROOT:partial$excerpts.adoc[tags=update-log]
 
 include::6.1@platform:admin:partial$update-conditions.adoc[]
 

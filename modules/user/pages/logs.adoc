@@ -1,20 +1,64 @@
-= Журнал работы приложения
+:of-what: {of-mc}
+:version: {mc-log-req}
 
-Технические журналы Консоли управления и {of-sett-serv} можно посмотреть в каталоге `/var/log/docsvision` для Linux и `C:\ProgramData\Docsvision` для Windows.
+= Журнал работы {of-mc}
 
-Чтобы изменить путь хранения файла журнала по умолчанию, нужно в конфигурационном файле модуля `appsettings.json` изменить параметр menu:NLog[targets > logFile > fileName] с указанием нужного пути:
+Технические журналы Консоли управления и {of-sett-serv} можно посмотреть в каталоге `/var/log/docsvision/managementconsole` для Linux и `C:\ProgramData\Docsvision\ManagementConsole` для Windows.
 
-.Путь к файлу журнала:
+include::GBL-3610@engineer:ROOT:partial$excerpts.adoc[tags=nlog-json]
+
+[subs="specialchars,attributes,quotes"]
+Пути к журналам, уровень и режим журналирования настраиваются в конфигурационном файле по адресу {config-mc}:
+
 [source,json]
 ----
 {
   "NLog": {
-    "targets": {
-      "logFile": {
-        "type": "File",
-        "fileName": "${gdc:baseLogFolder}/docsvision/managementconsole/${shortdate}_ManagementConsole.log"
+    "variables": { <.>
+      "fileLogLevel": "Error", <.>
+      "consoleLogLevel": "Error", <.>
+      "enableFileLogging": "true", <.>
+      "enableConsoleLogging": "true", <.>
+      "jsonLayout": { <.>
+        "type": "JsonLayout", <.>
+        "includeAllProperties": true, <.>
+        "attributes": [ <.>
+          {
+          "name": "timestamp", <.>
+          "layout": "${date:format=yyyy-MM-dd HH\\:mm\\:ss.fff}" <.>
+          }
+        ]
       }
-    }
+    },
+    "targets": {
+      "logFile": { <.>
+        "type": "File",
+        "fileName": "${gdc:baseLogFolder}/docsvision/managementconsole/${shortdate}_ManagementConsole.log", <.>
+        "layout": "[${longdate}][${level}][${callsite}] ${message} ${exception:format=tostring,Data}"
+        "logConsole": { "type": "Console" } <.>
+      },
+    },
+    "rules": [
+      {
+        "logger": "*",
+        "minLevel": "Warn", <.>
+        "writeTo": "logFile"
+      }
+    ]
   }
 }
 ----
+<.> `variables` -- раздел определяет параметры, которые используются в других частях конфигурации.
+<.> `fileLogLevel` -- задаёт уровень журналирования для файла журнала.
+<.> `consoleLogLevel` -- задаёт уровень журналирования для консоли (stdout/stderr).
+<.> `enableFileLogging` -- включает или отключает ведение журнала в файл.
+<.> `enableConsoleLogging` -- включает или отключает ведение журнала в консоль (stdout/stderr).
+<.> `jsonLayout` -- определяет JSON-структуру сообщений журнала.
+<.> `logFile` -- настройки для режима вывода журнала в файл.
+<.> В `fileName` можно настроить путь для сохранения журнала работы. Поддерживаются https://github.com/nlog/NLog/wiki/File-target[допустимые для NLog переменные].
+<.> `logConsole` -- настройки для режима вывода журнала в stdout/stderr процесса, например _journald_ в терминале Linux. Формат -- тот же JSON, что и для файла.
+<.> Измените значение параметров `minLevel` и `maxLevel`, например, на `trace`, чтобы включить протоколирование всех типов событий. +
+Допустимые уровни протоколирования приведены https://github.com/nlog/NLog/wiki/Configuration-file#log-levels[на странице NLog в GitHub]. +
+Для получения дополнительной информации о других настройках NLog обратитесь к документации по данной платформе.
+
+include::GBL-3610@engineer:ROOT:partial$modes-archivation-redefine.adoc[]
